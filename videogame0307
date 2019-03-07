@@ -1,0 +1,126 @@
+<html>
+	<head>
+		<canvas id="videogame" width="800" height="800" style="border:1px solid #000000"></canvas>
+		
+		<script>
+			//context
+			var ctx = document.getElementById("videogame").getContext("2d");
+			
+			//maze controls
+			//dimensions
+			var xDimensions = 10, //x-dimension in squares
+			yDimensions = 10, //y-dimensions in squares
+			squareSize = 10, //size of sides of squares in pixels
+			mazeSize = xDimensions * yDimensions; //total squares in maze
+			//blocks
+			var emptyBlock = {type:"empty"}, //empty
+			wallBlock = {type:"wall"}; //wall
+			var maze = [{type:"empty", num:0, visited:true}]; //all elements define a block in the maze
+			
+			function toMaze(x, y) { //converts coordinates in maze to square number
+				return x + y * yDimensions;
+			}
+			function toX(num) {
+				return num % (yDimensions - 1);
+			}
+			function toY(num) {
+				return num / (yDimensions - toX(num));
+			}
+			
+			
+			//init full maze
+			function newMaze() { //creates new maze and assigns num to each block
+				maze = [];
+				var i = 0;
+				while (maze.length < mazeSize) {
+					maze[i] = {type:"wall", num:i, visited:false};
+					i++;
+				}
+			}
+			
+			//maze generator
+			var stack = [];
+			function depthFirst() {
+				stack = [];
+				var random,
+				sidesOpen,
+				top;
+				empty(0);
+				
+				while(stack.length > 0) {
+					sidesOpen = [];
+					if (stack.length >= 1) {
+						if (typeof stack[stack.length-1] === "object") {
+							if (Object.prototype.hasOwnProperty.call(stack[stack.length-1], "num")) {
+								top = stack[stack.length-1].num;
+								topX = toX(top),
+								topY = toY(top);
+							}
+						}
+					}
+					
+					if (topY % yDimensions - 2 >= 0) { //up
+						if (checkMe(topX, topY - 2)) {
+							sidesOpen.push(toMaze(topX, topY - 2));
+						}
+					}
+					if (topX % xDimensions + 2 <= xDimensions) { //right
+						if (checkMe(topX + 2, topY)) {
+							sidesOpen.push(toMaze(topX + 2, topY));
+						}
+					}
+					if (topY % yDimensions + 2 <= yDimensions) { //down
+						if (checkMe(topX, topY + 2)) {
+							sidesOpen.push(toMaze(topX, topY + 2));
+						}
+					}
+					if (topX % xDimensions - 2 >= 0) { //left
+						if (checkMe(topX - 2, topY)) {
+							sidesOpen.push(toMaze(topX - 2, topY));
+						}
+					}
+					
+					if (sidesOpen.length == 0) { //if no sides are unvisited then pop stack
+						stack.pop();
+					} else { //if there are unvisited sides
+						random = Math.floor(Math.random() * (sidesOpen.length + 1));
+						emptyRect(top, sidesOpen[random]);
+						stack.push(sidesOpen[random]);
+					}
+				}
+			}
+			function checkMe(x, y) {
+				if (maze.length >= 0) {
+					if (typeof maze[toMaze(x, y)] === "object") {
+						if (Object.prototype.hasOwnProperty.call(maze[toMaze(x, y)], "visited")) {
+							return !maze[toMaze(x, y)].visited;
+						}
+					}
+				}
+				return false;
+			}
+			function empty(num) {
+				if (maze.length >= num) {
+					maze[num].type = "empty",
+					maze[num].visited = true,
+					stack.push(maze[num]);
+				}
+			}
+			function emptyRect(num1, num2) {
+				var numX1 = toX(num1),
+				numY1 = toY(num1),
+				numX2 = toX(num2),
+				numY2 = toY(num2);
+				for (var a = numX1; a <= numX2; a++) {
+					for (var b = numY1; b <= numY2; b++) {
+						empty(toMaze(a, b));
+					}
+				}
+			}
+			
+			//VIDEO GAME
+			newMaze();
+			depthFirst();
+		</script>
+	</head>
+</html>
